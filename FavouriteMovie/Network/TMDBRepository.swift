@@ -23,7 +23,7 @@ class TMDBRepository {
         page: Int = 1,
         sort: DiscoverEndpoint.Sort = .popularity(.descending)
     ) async throws -> DiscoverResponse {
-        let request = try DiscoverEndpoint.movi(
+        let request = try DiscoverEndpoint.movie(
             adult: adult,
             includeVideo: includeVideo,
             language: language,

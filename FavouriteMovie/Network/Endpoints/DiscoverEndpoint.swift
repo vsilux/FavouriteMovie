@@ -8,7 +8,7 @@
 import Foundation
 
 enum DiscoverEndpoint: Endpoint {
-    private enum QueryKey: String {
+    enum QueryKey: String {
         case adult = "include_adult"
         case language = "language"
         case page = "page"
@@ -28,7 +28,7 @@ enum DiscoverEndpoint: Endpoint {
         case voteAverage(Direction)
         case voteCount(Direction)
         
-        var string: String {
+        var stringify: String {
             switch self {
             case let .popularity(direction):
                 return "popularity.\(direction.rawValue)"
@@ -47,7 +47,7 @@ enum DiscoverEndpoint: Endpoint {
     }
     
     
-    case movi(
+    case movie(
         adult: Bool,
         includeVideo: Bool,
         language: String,
@@ -63,73 +63,67 @@ enum DiscoverEndpoint: Endpoint {
     
     static var subpath: String = "/discover"
     
-    func request(baseUrl: String, apiKey: String) throws -> URLRequest {
-        let url = URL(string: {
+    func url(baseUrl: String) -> URL {
+        URL(string: {
             let path = "\(baseUrl)\(Self.subpath)"
             switch self {
-            case .movi:
+            case .movie:
                 return "\(path)/movie"
             case .tv:
                 return "\(path)/tv"
             }
         }())!
-        
-        var components = URLComponents(
-            url: url,
-            resolvingAgainstBaseURL: false
-        )!
-        
+    }
+    
+    func urlComponents(components: inout URLComponents) {
         switch self {
-        case let .movi(adult, includeVideo, language, page, sort):
+        case let .movie(adult, includeVideo, language, page, sort):
             components.queryItems = [
                 URLQueryItem(
-                    name: QueryKey.adult.rawValue,
-                    value: adult ? "true" : "false"
+                    key: QueryKey.adult,
+                    value: adult
                 ),
                 URLQueryItem(
-                    name: QueryKey.includeVideo.rawValue,
-                    value: includeVideo ? "true" : "false"
+                    key: QueryKey.includeVideo,
+                    value: includeVideo
                 ),
                 URLQueryItem(
-                    name: QueryKey.language.rawValue,
+                    key: QueryKey.language,
                     value: language
                 ),
                 URLQueryItem(
-                    name: QueryKey.page.rawValue,
+                    key: QueryKey.page,
                     value: "\(page)"
                 ),
                 URLQueryItem(
-                    name: QueryKey.sortBy.rawValue,
-                    value: sort.string
+                    key: QueryKey.sortBy,
+                    value: sort.stringify
                 ),
             ]
         case let .tv(adult, language, page, sort):
             components.queryItems = [
                 URLQueryItem(
-                    name: QueryKey.adult.rawValue,
-                    value: adult ? "true" : "false"
+                    key: QueryKey.adult,
+                    value: adult
                 ),
                 URLQueryItem(
-                    name: QueryKey.language.rawValue,
+                    key: QueryKey.language,
                     value: language
                 ),
                 URLQueryItem(
-                    name: QueryKey.page.rawValue,
+                    key: QueryKey.page,
                     value: "\(page)"
                 ),
                 URLQueryItem(
-                    name: QueryKey.sortBy.rawValue,
-                    value: sort.string
+                    key: QueryKey.sortBy,
+                    value: sort.stringify
                 ),
             ]
         }
-        
-        var request = URLRequest(url: components.url!)
-        request.httpMethod = "GET"
-        request.setValue("application/json", forHTTPHeaderField: "accept")
-        request.setValue("Bearer " + apiKey, forHTTPHeaderField: "Authorization")
-        
-        return request
+    }
+    
+    func urlRequest(urlRequest: inout URLRequest) {
+        urlRequest.httpMethod = "GET"
     }
 }
 
@@ -175,7 +169,6 @@ struct DiscoverResponse: Codable {
     }
 }
 
-// MARK: - Result
 struct Film: Codable {
     let adult: Bool
     let backdropPath: String
